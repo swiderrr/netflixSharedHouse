@@ -8,17 +8,16 @@ import time
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from dotenv import load_dotenv
-sys.path.append(os.path.join(os.path.dirname(__file__), '../config'))
+
+sys.path.append(os.path.join(os.path.dirname(__file__), "../config"))
 from config import EMAIL_ADDRESS, PASSWORD, IMAP_SERVER, IMAP_PORT, SEARCH_CRITERIA
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
-    handlers=[
-        logging.FileHandler("app.log"),
-        logging.StreamHandler()
-    ]
+    handlers=[logging.FileHandler("app.log"), logging.StreamHandler()],
 )
+
 
 class MailChecker:
     def __init__(self):
@@ -33,17 +32,19 @@ class MailChecker:
         logging.info("Initializing WebDriver...")
         try:
             chrome_options = webdriver.ChromeOptions()
-            chrome_options.add_argument('--headless')
-            chrome_options.add_argument('--no-sandbox')
-            chrome_options.add_argument('--disable-dev-shm-usage')
-            chrome_options.add_argument('--disable-gpu')
+            chrome_options.add_argument("--headless")
+            chrome_options.add_argument("--no-sandbox")
+            chrome_options.add_argument("--disable-dev-shm-usage")
+            chrome_options.add_argument("--disable-gpu")
             logging.info("WebDriver initialized successfully.")
             driver = webdriver.Chrome(options=chrome_options)
             return driver
         except Exception as e:
             logging.error(f"Failed to initialize WebDriver: {e}")
             logging.error("Ensure that Chrome WebDriver is installed and accessible.")
-            print("Critical Error: Failed to initialize WebDriver. Check logs for details.")
+            print(
+                "Critical Error: Failed to initialize WebDriver. Check logs for details."
+            )
             return None
 
     @staticmethod
@@ -56,7 +57,9 @@ class MailChecker:
             return mail
         except Exception as e:
             logging.error(f"Failed to initialize IMAP mailbox: {e}")
-            print("Critical Error: Failed to initialize IMAP mailbox. Check logs for details.")
+            print(
+                "Critical Error: Failed to initialize IMAP mailbox. Check logs for details."
+            )
             return None
 
     def close(self) -> None:
@@ -65,13 +68,13 @@ class MailChecker:
         self.__close_mailbox__()
 
     def __close_webdriver__(self) -> None:
-        if hasattr(self, 'driver') and self.driver:
+        if hasattr(self, "driver") and self.driver:
             logging.info("Closing WebDriver...")
             self.driver.quit()
             logging.info("WebDriver closed.")
 
     def __close_mailbox__(self) -> None:
-        if hasattr(self, 'mail') and self.mail:
+        if hasattr(self, "mail") and self.mail:
             logging.info("Closing IMAP connection...")
             try:
                 self.mail.close()
@@ -87,20 +90,20 @@ class MailChecker:
 
     def check_mail(self) -> str:
         try:
-            self.mail.select('inbox')
-            result, data = self.mail.search(None, f'{SEARCH_CRITERIA}')
+            self.mail.select("inbox")
+            result, data = self.mail.search(None, f"{SEARCH_CRITERIA}")
             mail_ids = data[0].split()
 
             if not mail_ids:
                 logging.info("No matching emails found")
-                return ''
+                return ""
 
             latest_email_id = mail_ids[-1]
             status, msg_data = self.mail.fetch(latest_email_id, "(RFC822)")
 
-            if status != 'OK':
+            if status != "OK":
                 logging.error("Failed to fetch email")
-                return ''
+                return ""
 
             for response_part in msg_data:
                 if isinstance(response_part, tuple):
@@ -115,14 +118,17 @@ class MailChecker:
                     else:
                         body_payload = msg.get_payload(decode=True).decode()
 
-                    links = re.findall(r"https?://[^\s<>\"\']+/account/update-primary-location.+", body_payload)
-                    return links[0] if links else ''
+                    links = re.findall(
+                        r"https?://[^\s<>\"\']+/account/update-primary-location.+",
+                        body_payload,
+                    )
+                    return links[0] if links else ""
 
-            return ''
+            return ""
         except Exception as e:
             logging.error(f"Error while checking mail: {e}")
             print("Error: Failed to check mail. Check logs for details.")
-            return ''
+            return ""
 
     def click_button(self, link: str) -> bool:
         if not link:
@@ -132,7 +138,9 @@ class MailChecker:
         try:
             self.driver.get(link)
             time.sleep(2)
-            button = self.driver.find_element(By.CSS_SELECTOR, '[role="button"][type="button"]')
+            button = self.driver.find_element(
+                By.CSS_SELECTOR, '[role="button"][type="button"]'
+            )
             button.click()
             print("Button clicked successfully.")
             return True
