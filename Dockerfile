@@ -1,19 +1,21 @@
-FROM python:3.9-slim-buster
+FROM python:3.11-slim
 
 WORKDIR /app
 
-COPY requirements.txt .
-RUN apt update && apt install -y libglib2.0-0 \
-    libnss3 \
-    libfontconfig1 \
-    libgconf-2-4 \
-    libxcb-randr0-dev \
-    libxcb-xtest0-dev \
-    libxcb-xinerama0-dev \
-    libxcb-shape0-dev \
-    libxcb-xkb-dev
-RUN pip3 install -r requirements.txt
+RUN apt-get update && apt-get install -y \
+    curl \
+    unzip \
+    chromium \
+    chromium-driver \
+    && rm -rf /var/lib/apt/lists/*
 
-COPY . .
+ENV CHROMEDRIVER_PATH=/usr/bin/chromedriver
+ENV CHROME_BIN=/usr/bin/chromium
+
+COPY requirements.txt .
+WORKDIR /app
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . /app
 
 CMD [ "python3", "src/main.py" ]

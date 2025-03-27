@@ -6,6 +6,9 @@ import re
 import email
 import time
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
 from dotenv import load_dotenv
 
@@ -35,9 +38,11 @@ class MailChecker:
             chrome_options.add_argument("--headless")
             chrome_options.add_argument("--no-sandbox")
             chrome_options.add_argument("--disable-dev-shm-usage")
-            chrome_options.add_argument("--disable-gpu")
+
+            service = Service(ChromeDriverManager().install())
+            driver = webdriver.Chrome(service=service, options=options)
+
             logging.info("WebDriver initialized successfully.")
-            driver = webdriver.Chrome(options=chrome_options)
             return driver
         except Exception as e:
             logging.error(f"Failed to initialize WebDriver: {e}")
