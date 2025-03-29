@@ -6,9 +6,7 @@ import re
 import email
 import time
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
-from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
 from dotenv import load_dotenv
 
@@ -34,13 +32,13 @@ class MailChecker:
     def __init_webdriver__() -> webdriver.Chrome:
         logging.info("Initializing WebDriver...")
         try:
-            chrome_options = webdriver.ChromeOptions()
+            chrome_options = Options()
             chrome_options.add_argument("--headless")
             chrome_options.add_argument("--no-sandbox")
             chrome_options.add_argument("--disable-dev-shm-usage")
+            chrome_options.add_argument("--disable-gpu")
 
-            service = Service(ChromeDriverManager().install())
-            driver = webdriver.Chrome(service=service, options=options)
+            driver = webdriver.Chrome(executable_path='/usr/bin/chromedriver', options=chrome_options)
 
             logging.info("WebDriver initialized successfully.")
             return driver
@@ -98,14 +96,12 @@ class MailChecker:
             self.mail.select("inbox")
             result, data = self.mail.search(None, f"{SEARCH_CRITERIA}")
             mail_ids = data[0].split()
-
             if not mail_ids:
                 logging.info("No matching emails found")
                 return ""
 
             latest_email_id = mail_ids[-1]
             status, msg_data = self.mail.fetch(latest_email_id, "(RFC822)")
-
             if status != "OK":
                 logging.error("Failed to fetch email")
                 return ""
@@ -122,12 +118,11 @@ class MailChecker:
                                 break
                     else:
                         body_payload = msg.get_payload(decode=True).decode()
-
                     links = re.findall(
                         r"https?://[^\s<>\"\']+/account/update-primary-location.+",
                         body_payload,
                     )
-                    return links[0] if links else ""
+                    return links[0][:-2] if links else ""
 
             return ""
         except Exception as e:
@@ -142,9 +137,10 @@ class MailChecker:
             return False
         try:
             self.driver.get(link)
+            print("DUPA")
             time.sleep(2)
             button = self.driver.find_element(
-                By.CSS_SELECTOR, '[role="button"][type="button"]'
+               By.CSS_SELECTOR, '[role="button"][type="button"]'
             )
             button.click()
             print("Button clicked successfully.")
